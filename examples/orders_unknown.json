@@ -1,0 +1,14 @@
+{
+  "name": "orders_unknown_address",
+  "schema": {
+    "Order": ["text", "text"],
+    "Customer": ["text", "text"]
+  },
+  "rules": [
+    {"id": "t_order_customer", "body": ["Order(o, c)"], "head": "Customer(c, a)"},
+    {"id": "e_customer_key", "body": ["Customer(c, a1)", "Customer(c, a2)"], "eq": ["a1", "a2"]}
+  ],
+  "facts": {
+    "Order": [["o1", "c"], ["o2", "c"], ["o3", "d"]]
+  }
+}

@@ -1,0 +1,135 @@
+# Typed relational completion
+
+Reads typed facts and a declarative set of TGDs/EGDs, and produces a package
+that is a **constraint-satisfying completion** of the input: derived rows where
+the dependencies demand them, explicit `labeled_null` placeholders where a value
+is unknown, and a hard failure (`conflict`) when two distinct known constants
+would have to be equal.
+
+No default values are invented; unknowns are never dressed up as source facts.
+
+## Quick start
+
+```bash
+python3 -m chase check    examples/orders_known.json        # validate the program
+python3 -m chase complete examples/orders_known.json -o /tmp/pkg
+python3 -m chase verify   /tmp/pkg                          # independent check
+python3 -m chase trace    /tmp/pkg --null n0                # where did n0 come from?
+```
+
+Exit codes: `0` ok / complete / verified, `2` conflict (or program rejected),
+`3` incomplete or error, `4` verification failed, `5` usage/input error.
+
+## Input format
+
+```json
+{
+  "schema": {
+    "Order":         ["text", "text"],
+    "Customer":      ["text", "text"],
+    "KnownAddress":  ["text", "text"]
+  },
+  "rules": [
+    {"id": "t_order_customer", "body": ["Order(o, c)"], "head": "Customer(c, a)"},
+    {"id": "t_known_customer", "body": ["KnownAddress(c, a)"], "head": "Customer(c, a)"},
+    {"id": "e_customer_key",   "body": ["Customer(c, a1)", "Customer(c, a2)"],
+     "eq": ["a1", "a2"]}
+  ],
+  "facts": {
+    "Order":        [["o1", "c"], ["o2", "c"]],
+    "KnownAddress": [["c", "城东"]]
+  },
+  "budgets": {"max_facts": 500000, "max_triggers": 200000,
+              "max_probes": 5000000, "max_seconds": 120,
+              "max_match_rows": 200000, "max_rounds": 10000}
+}
+```
+
+* **Relations** are typed `text`/`int`.  Facts are a **set** (duplicates drop).
+* **Unknowns already present in the input** are written `{"null": "u1"}`.
+  All occurrences of `u1` are one unknown; different ids are different.
+* **TGD**: `head` is one atom; head variables not bound by the body are
+  existential.  Constants in heads are allowed; variables must be consistently
+  typed.
+* **EGD**: `eq` names two terms bound by the body.
+* Bodies may self-join, repeat variables and use constants.
+* Negation, arithmetic and user code are rejected at parse time; rules must
+  have fixed unique ids and may not mention undeclared relations.
+
+## What is in a package
+
+```
+pkg/
+  package.json      status marker ("complete"/"conflict"/"incomplete"/"error"),
+                    budgets, input facts, stats — written LAST, atomically
+  schema.json       relation -> column types
+  rules.json        normalized rules + weak-acyclicity annotations
+  facts.csv         relation,values  where values are
+                    {"kind":"string"|"int"|"labeled_null", ...}
+  nulls.json        every unknown: input or rule-created, final class,
+                    unified_with if absorbed by a constant
+  conflict.json     only for conflicts: binding, both constants, support rows,
+                    source paths and merge history
+  provenance.sqlite triggers, unifications, per-fact origins (trace backend)
+```
+
+`facts.csv` distinguishes:
+
+| value | JSON |
+|---|---|
+| source string | `{"kind": "string", "value": "城东"}` |
+| source int | `{"kind": "int", "value": 42}` |
+| **unknown placeholder** | `{"kind": "labeled_null", "id": "n0", "display": "NULL:n0"}` |
+| missing field | row absent (there is no "null column"; relations are typed) |
+
+JSON `null` is never a fact value: the loader rejects it.  An unknown is not a
+value "read from the source" — it carries its own id and provenance.
+
+## Semantics in one page
+
+* Standard chase: a TGD trigger whose head already has a witness is satisfied
+  and creates nothing; otherwise one fresh unknown per existential **of that
+  firing** is created, shared across its head occurrences.
+* EGDs merge unknowns into classes; an unknown merged with a source constant
+  *becomes* that constant; two distinct source constants are a **conflict**,
+  reported with binding, constants and evidence.
+* After each unification round every stored row is rewritten through the
+  canonical map, duplicates collapse, and changed rows are re-chased, so joins
+  that appear only after unification are still explored.
+* Completion means: a TGD pass adds no row and an EGD pass merges nothing.
+* TGDs must be weakly acyclic (see `docs/DESIGN.md`); this is checked on the
+  rules alone, never inferred from the sample terminating.  Budgets make an
+  over-long run `incomplete`, not `complete`.
+
+## Verification
+
+`verify` reloads the package from disk and checks, from scratch and without
+trusting `package.json`: each TGD has a head witness for every body binding,
+each EGD holds, every input constant fact is preserved, values are type-correct,
+and unknown bookkeeping is consistent.  It shares only the parser with the
+engine.
+
+## Development
+
+```bash
+python3 run_tests.py            # 85 tests, no external deps required
+python3 -m chase.bench --orders 50000 --customers 10000 --no-verify
+```
+
+Recorded on this machine (Python 3.11, SQLite 3.40):
+
+| workload | facts in | facts out | triggers | unifications | seconds | peak RSS |
+|---|---|---|---|---|---|---|
+| 5 000 orders / 1 000 customers | 5 537 | 6 534 | 1 531 fired / 4 006 skipped | 534 | 0.43 | 23 MB |
+| 20 000 orders / 4 000 customers | 22 031 | 26 018 | 6 003 fired / 16 028 skipped | 2 016 | 1.9 | 40 MB |
+| 50 000 orders / 10 000 customers | 55 030 | 64 985 | 14 952 fired / 40 078 skipped | 4 997 | 4.9 | 72 MB |
+
+The 50 000-row run plus its independent package verification takes 7.9 s
+end-to-end (`python3 -m chase.bench --orders 50000 --customers 10000`).
+
+The whole instance lives on disk in SQLite; only one body atom's matches are
+materialized at a time (bounded by `max_match_rows`), and the pending trigger
+queue is a disk table.
+
+See `docs/DESIGN.md` for termination, the unification/rebuild argument, and the
+correctness tests.

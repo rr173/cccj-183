@@ -1,0 +1,14 @@
+{
+  "name": "int_key_recursion",
+  "schema": {
+    "Edge": ["int", "int"],
+    "Path": ["int", "int"]
+  },
+  "rules": [
+    {"id": "path_base", "body": ["Edge(x, y)"], "head": "Path(x, y)"},
+    {"id": "path_step", "body": ["Path(x, y)", "Edge(y, z)"], "head": "Path(x, z)"}
+  ],
+  "facts": {
+    "Edge": [[1, 2], [2, 3], [3, 4]]
+  }
+}
