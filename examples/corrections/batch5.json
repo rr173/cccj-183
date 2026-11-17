@@ -1,0 +1,9 @@
+{
+  "batch_id": "b5-remove-supports",
+  "comment": "v5: delete one of the two Order supports (the fact survives on erp's record) and delete both Link records (the recursive Reach derivation loses its last external support and disappears completely).",
+  "ops": [
+    {"op": "delete", "source_id": "shop", "record_id": "order-o1"},
+    {"op": "delete", "source_id": "ops",  "record_id": "link-d1-d2"},
+    {"op": "delete", "source_id": "ops",  "record_id": "link-d2-d3"}
+  ]
+}

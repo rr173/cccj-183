@@ -1,0 +1,21 @@
+{
+  "name": "corrections_demo",
+  "comment": "Fixed program for the source-correction workspace demo: orders supported by two sources, input unknowns bridged to a known address, a recursive Reach derivation.",
+  "schema": {
+    "Order":        ["text", "text"],
+    "Customer":     ["text", "text"],
+    "KnownAddress": ["text", "text"],
+    "SameAs":       ["text", "text"],
+    "Link":         ["text", "text"],
+    "Reach":        ["text", "text"]
+  },
+  "rules": [
+    {"id": "t_order_customer", "body": ["Order(o, c)"], "head": "Customer(c, a)"},
+    {"id": "t_known_customer", "body": ["KnownAddress(c, a)"], "head": "Customer(c, a)"},
+    {"id": "t_sameas_copy",    "body": ["SameAs(x, y)", "KnownAddress(x, a)"], "head": "KnownAddress(y, a)"},
+    {"id": "e_customer_key",   "body": ["Customer(c, a1)", "Customer(c, a2)"], "eq": ["a1", "a2"]},
+    {"id": "e_address_key",    "body": ["KnownAddress(c, a1)", "KnownAddress(c, a2)"], "eq": ["a1", "a2"]},
+    {"id": "t_link",           "body": ["Link(x, y)"], "head": "Reach(x, y)"},
+    {"id": "t_reach",          "body": ["Link(x, y)", "Reach(y, z)"], "head": "Reach(x, z)"}
+  ]
+}

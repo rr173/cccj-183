@@ -350,6 +350,9 @@ def build_parser() -> argparse.ArgumentParser:
     t.add_argument("--fact", default=None, help="exact fact, e.g. 'Customer(\"c\", *)'")
     t.add_argument("--row", default=None, help="pattern fact")
     t.set_defaults(func=cmd_trace)
+
+    from . import wscli
+    wscli.register(sub)
     return p
 
 

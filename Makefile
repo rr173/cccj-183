@@ -18,5 +18,11 @@ examples:
 bench:
 	$(PY) -m chase.bench --orders 50000 --customers 10000 --no-verify
 
+ws-demo:
+	bash examples/corrections/demo.sh /tmp/chase-ws-demo
+
+ws-bench:
+	$(PY) -m chase.wsbench --workspace /tmp/chase-ws-bench --orders 10000 --customers 2000 --corrections 8
+
 clean:
 	rm -rf __pycache__ chase/__pycache__ tests/__pycache__ .pytest_cache

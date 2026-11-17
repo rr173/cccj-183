@@ -1,0 +1,8 @@
+{
+  "batch_id": "b4-retract-and-correct",
+  "comment": "v4: retract the wrong crm address and correct the erp address 城西 -> 城北 atomically. Continues from the conflict version v3 (the latest source version), not from the last complete one.",
+  "ops": [
+    {"op": "delete", "source_id": "crm", "record_id": "addr-c1-pudong"},
+    {"op": "put",    "source_id": "erp", "record_id": "addr-c1-known", "relation": "KnownAddress", "tuple": ["c1", "城北"]}
+  ]
+}

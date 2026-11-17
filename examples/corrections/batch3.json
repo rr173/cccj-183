@@ -1,0 +1,7 @@
+{
+  "batch_id": "b3-conflicting-address",
+  "comment": "v3: crm sends a second known address for c1. Legal batch, but the completion conflicts (城西 vs 浦东); the conflict is kept as a queryable version.",
+  "ops": [
+    {"op": "put", "source_id": "crm", "record_id": "addr-c1-pudong", "relation": "KnownAddress", "tuple": ["c1", "浦东"]}
+  ]
+}

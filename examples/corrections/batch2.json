@@ -1,0 +1,8 @@
+{
+  "batch_id": "b2-remove-bridge-replace-address",
+  "comment": "v2: retract the SameAs bridge and replace the known address 城东 -> 城西 in ONE batch. u1 and u2 split back into two classes; u2 loses its known value.",
+  "ops": [
+    {"op": "delete", "source_id": "bridge", "record_id": "same-c1-c2"},
+    {"op": "put",    "source_id": "erp",    "record_id": "addr-c1-known", "relation": "KnownAddress", "tuple": ["c1", "城西"]}
+  ]
+}

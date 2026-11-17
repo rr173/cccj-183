@@ -1,0 +1,14 @@
+{
+  "batch_id": "b1-initial-load",
+  "comment": "v1: two sources support the same order o1; input unknowns u1 (erp) and u2 (crm) are bridged to 城东 via the SameAs bridge record; Link chain feeds recursive Reach.",
+  "ops": [
+    {"op": "put", "source_id": "erp",    "record_id": "order-o1",        "relation": "Order",        "tuple": ["o1", "c1"]},
+    {"op": "put", "source_id": "shop",   "record_id": "order-o1",        "relation": "Order",        "tuple": ["o1", "c1"]},
+    {"op": "put", "source_id": "erp",    "record_id": "addr-c1-unknown", "relation": "KnownAddress", "tuple": ["c1", {"null": "u1"}]},
+    {"op": "put", "source_id": "crm",    "record_id": "addr-c2-unknown", "relation": "KnownAddress", "tuple": ["c2", {"null": "u2"}]},
+    {"op": "put", "source_id": "erp",    "record_id": "addr-c1-known",   "relation": "KnownAddress", "tuple": ["c1", "城东"]},
+    {"op": "put", "source_id": "bridge", "record_id": "same-c1-c2",      "relation": "SameAs",       "tuple": ["c1", "c2"]},
+    {"op": "put", "source_id": "ops",    "record_id": "link-d1-d2",      "relation": "Link",         "tuple": ["d1", "d2"]},
+    {"op": "put", "source_id": "ops",    "record_id": "link-d2-d3",      "relation": "Link",         "tuple": ["d2", "d3"]}
+  ]
+}

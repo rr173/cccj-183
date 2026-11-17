@@ -109,11 +109,40 @@ each EGD holds, every input constant fact is preserved, values are type-correct,
 and unknown bookkeeping is consistent.  It shares only the parser with the
 engine.
 
+## Correction workspace (sources that change over time)
+
+`complete` handles one input.  When a supplier retracts misreported records
+and re-sends corrected ones, use the versioned workspace instead — it keeps
+the raw source records of every version and re-decides each version's result
+from those raw sources, so unknowns merged by an EGD can split apart again
+and derivations that lost their last support disappear:
+
+```bash
+python3 -m chase ws init     /tmp/ws --program examples/corrections/program.json
+python3 -m chase ws commit   /tmp/ws --batch examples/corrections/batch1.json
+python3 -m chase ws commit   /tmp/ws --batch examples/corrections/batch2.json
+python3 -m chase ws versions /tmp/ws
+python3 -m chase ws diff     /tmp/ws --from 1 --to 2 --human
+python3 -m chase ws export   /tmp/ws --version 2 -o /tmp/ws-v2
+python3 -m chase ws verify   /tmp/ws-v2
+```
+
+Source records are keyed `(source_id, record_id)`; batches (`put`/`delete`
+ops under a unique `batch_id`) are validated and applied as a whole, every
+legal batch becomes a numbered source version (`complete`/`conflict`/
+`incomplete` results are all kept), re-sending a batch replays its original
+receipt, and `latest source version` vs `latest complete version` are
+exposed separately.  State lives in one SQLite file; commits are single
+transactions; concurrent writers get a clear stale-parent error.  See
+`docs/WORKSPACE.md` and `bash examples/corrections/demo.sh`.
+
+
 ## Development
 
 ```bash
-python3 run_tests.py            # 85 tests, no external deps required
+python3 run_tests.py            # 121 tests, no external deps required
 python3 -m chase.bench --orders 50000 --customers 10000 --no-verify
+python3 -m chase.wsbench --workspace /tmp/wsb --orders 10000 --customers 2000 --corrections 8
 ```
 
 Recorded on this machine (Python 3.11, SQLite 3.40):
