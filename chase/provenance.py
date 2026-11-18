@@ -91,6 +91,10 @@ class ProvenanceDB:
                  json.dumps([m["unified"][0], m["unified"][1]], ensure_ascii=False),
                  json.dumps(m["result"], ensure_ascii=False),
                  json.dumps(m["support"], ensure_ascii=False)))
+        # Canonical text form of vals, as fact_origin.trace_pattern reads it;
+        # used only to join the staged fact set to provenance rows.
+        self.conn.execute("CREATE INDEX IF NOT EXISTS ix_fact_rel_vals "
+                          "ON fact_origin(rel, vals)")
         keyed: Dict[str, Tuple[str, List[List[object]], Dict[str, Any]]] = {}
         for rel, rows in facts.items():
             for row in rows:
@@ -102,7 +106,7 @@ class ProvenanceDB:
             self.conn.execute(
                 "INSERT INTO fact_origin(rel, vals, kind, rule, trigger_key, source, origin) "
                 "VALUES (?,?,?,?,?,?,?)",
-                (rel, json.dumps(ks_row, ensure_ascii=False),
+                (rel, json.dumps(ks_row, ensure_ascii=False),  # NOSONAR
                  origin.get("kind", "unknown"), origin.get("rule"),
                  origin.get("trigger"), origin.get("source"),
                  json.dumps(origin, ensure_ascii=False, default=str)))

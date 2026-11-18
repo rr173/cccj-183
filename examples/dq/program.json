@@ -1,0 +1,18 @@
+{
+  "name": "dq_audit_demo",
+  "comment": "Fixed program for the data-quality audit demo: orders derive customers, known regions are copied in, one region per customer (EGD), and Done is a rule-derived bridge target so reference audit can cite a derived fact.",
+  "schema": {
+    "Order":       ["text", "text"],
+    "Customer":    ["text", "text"],
+    "KnownRegion": ["text", "text"],
+    "Done":        ["text", "text"],
+    "Item":        ["text", "text", "int"]
+  },
+  "rules": [
+    {"id": "t_order_customer", "body": ["Order(o, c)"], "head": "Customer(c, r)"},
+    {"id": "t_known_region",   "body": ["KnownRegion(c, r)"], "head": "Customer(c, r)"},
+    {"id": "t_done",           "body": ["Order(o, c)"], "head": "Done(o, c)"},
+    {"id": "e_customer_region", "body": ["Customer(c, r1)", "Customer(c, r2)"],
+     "eq": ["r1", "r2"]}
+  ]
+}

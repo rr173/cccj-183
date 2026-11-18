@@ -196,6 +196,23 @@ marker:
 
 A tampered source manifest, null map or fact table fails verification.
 
+## Data-quality audits (`ws dq`)
+
+The workspace also persists **policy audits** over its versions: a restricted
+JSON policy (identity + revision, declarative checks only) is evaluated against
+a pinned source version and/or a pinned complete version, and the report says
+per rule which records violate it.  Runs and policies are stored in
+`<workspace>/dq_audits.sqlite` (a separate database, one transaction per run);
+sources, version pointers and completed facts are never modified.  Full
+details, including how it differs from completion status, diffs and queries:
+`docs/DQ.md`.
+
+```bash
+python3 -m chase ws dq run WS --policy examples/dq/policy.json \
+        --sources-version 2 --completed-version 2 -o report.json
+python3 -m chase ws dq runs WS
+```
+
 ## Concurrency and crash safety
 
 * All state changes of a commit happen in **one SQLite transaction**

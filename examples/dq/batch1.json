@@ -1,0 +1,13 @@
+{
+  "batch_id": "dq-demo-initial",
+  "comment": "Two sources report the same order (a duplicate raw key), one customer region is still unknown (u1), and the item quantities include int 7 vs 700.",
+  "ops": [
+    {"op": "put", "source_id": "erp",  "record_id": "order-o1", "relation": "Order",       "tuple": ["o1", "c1"]},
+    {"op": "put", "source_id": "shop", "record_id": "order-o1", "relation": "Order",       "tuple": ["o1", "c1"]},
+    {"op": "put", "source_id": "erp",  "record_id": "order-o2", "relation": "Order",       "tuple": ["o2", "c2"]},
+    {"op": "put", "source_id": "crm",  "record_id": "region-c1", "relation": "KnownRegion", "tuple": ["c1", "东区"]},
+    {"op": "put", "source_id": "crm",  "record_id": "region-c2", "relation": "KnownRegion", "tuple": ["c2", {"null": "u1"}]},
+    {"op": "put", "source_id": "wms",  "record_id": "item-i1", "relation": "Item", "tuple": ["o1", "7", 700]},
+    {"op": "put", "source_id": "wms",  "record_id": "item-i2", "relation": "Item", "tuple": ["o2", "7", 7]}
+  ]
+}

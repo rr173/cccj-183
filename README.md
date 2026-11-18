@@ -193,6 +193,46 @@ or interrupted run never overwrites a previous success.  See `docs/QUERY.md`,
 `python3 -I scripts/wsquery_scale.py` (data generated at runtime, not
 committed).
 
+## Data-quality audits over pinned versions (`ws dq`)
+
+`ws dq` adds a persistent **policy audit**: business users maintain a
+restricted JSON policy (identity + revision; four declarative checks —
+required, typed uniqueness on raw source records, enum, cross-relation
+reference) and the integrator can ask, per version, *which rule, which
+record, which data version* blocks delivery.  Policies cannot contain SQL,
+expressions, regular expressions or code.
+
+```bash
+python3 -I run_cli.py ws dq check WS --policy examples/dq/policy.json
+python3 -I run_cli.py ws dq run   WS --policy examples/dq/policy.json \
+        --sources-version 2 --completed-version 2 -o report.json
+python3 -I run_cli.py ws dq runs  WS
+python3 -I run_cli.py ws dq show  WS --run 1
+```
+
+Each rule explicitly selects `sources` (raw records of a source version —
+runs even when that version's completion is conflict/incomplete, and the
+report states that status) or `completed` (facts of a complete version,
+derived facts included).  Versions, data and provenance are read from one
+read-only SQLite snapshot; `latest` is resolved once, so a concurrent commit
+cannot make a report mix two versions.  `labeled_null` is *unknown*: a
+required check reports it as a violation, enum/reference report it as
+indeterminate (never a pass).  Typed equality keeps text `"7"`, int `7` and
+an unknown apart; two different source records stay two inputs even when
+their completed fact is one row.
+
+Reports carry a content-derived `report_id` (policy digest + resolved
+version coordinates + sample limit), per-rule pass/violation/indeterminate/
+total counts, a bounded deterministic sample that still states the true
+total when truncated, source-record evidence (`source_id`, `record_id`) or
+fact/provenance evidence (rule, trigger, support, provenance hash).  Runs
+are stored in `<workspace>/dq_audits.sqlite` in one transaction; a failed or
+interrupted audit leaves the previous report and history untouched and never
+produces a `pass`.  See `docs/DQ.md`, `bash examples/dq/demo.sh`, and
+`python3 -I scripts/dq_scale.py` (100 000+ runtime-generated records,
+independent cross-check, per-rule scan/plan/timing/RSS; data is not
+committed).
+
 ## Development
 
 ```bash

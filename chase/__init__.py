@@ -15,6 +15,8 @@ from .workspace import (
 from .wsexport import export_version
 from .wsverify import verify_export
 from .wsdiff import diff_payloads, render_human
+from .dqpolicy import ParsedPolicy, PolicyError, parse_policy
+from .dqaudit import AuditError, AuditVersionError, DQRuns, run_audit
 
 __all__ = [
     "Budgets", "Engine", "RunResult", "Conflict", "ModelError", "ProgramError",
@@ -24,6 +26,7 @@ __all__ = [
     "VerifyReport", "LoadedPackage", "verify_package_dir", "ProvenanceDB",
     "Workspace", "WorkspaceError", "BatchInvalid", "BatchIdConflict",
     "StaleParent", "export_version", "verify_export", "diff_payloads",
-    "render_human",
+    "render_human", "ParsedPolicy", "PolicyError", "parse_policy",
+    "AuditError", "AuditVersionError", "DQRuns", "run_audit",
 ]
 __version__ = "1.0.0"

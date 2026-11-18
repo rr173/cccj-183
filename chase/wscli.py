@@ -313,6 +313,9 @@ def register(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--verify-cap", type=int, default=None)
     p.set_defaults(func=cmd_verify)
 
+    from . import dqcli
+    dqcli.register(wsub)
+
     p = wsub.add_parser(
         "query", help="run a declarative JSON query on one complete version")
     p.add_argument("workspace")

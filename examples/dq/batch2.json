@@ -1,0 +1,8 @@
+{
+  "batch_id": "dq-demo-correction",
+  "comment": "The supplier replaces the unknown region with 西区 and reports an item for an order that does not exist (ref missing).",
+  "ops": [
+    {"op": "put", "source_id": "crm", "record_id": "region-c2", "relation": "KnownRegion", "tuple": ["c2", "西区"]},
+    {"op": "put", "source_id": "wms", "record_id": "item-i9", "relation": "Item", "tuple": ["o9", "8", 42]}
+  ]
+}
