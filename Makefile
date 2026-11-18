@@ -1,12 +1,12 @@
 PY ?= python3
 
-.PHONY: test check examples bench clean
+.PHONY: test check examples bench clean ingest-demo ingest-scale
 
 test:
-	$(PY) run_tests.py
+	$(PY) -I run_tests.py
 
 check:
-	$(PY) -m compileall -q chase tests
+	$(PY) -I -m compileall -q chase tests scripts
 
 examples:
 	rm -rf /tmp/example-pkg
@@ -24,5 +24,11 @@ ws-demo:
 ws-bench:
 	$(PY) -m chase.wsbench --workspace /tmp/chase-ws-bench --orders 10000 --customers 2000 --corrections 8
 
+ingest-demo:
+	$(PY) -I scripts/ingest_demo.py
+
+ingest-scale:
+	$(PY) -I scripts/ingest_scale_profiled.py --rows 100000 --shards 4
+
 clean:
-	rm -rf __pycache__ chase/__pycache__ tests/__pycache__ .pytest_cache
+	rm -rf __pycache__ chase/__pycache__ tests/__pycache__ scripts/__pycache__ .pytest_cache

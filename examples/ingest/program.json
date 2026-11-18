@@ -1,0 +1,25 @@
+{
+  "name": "ingest_demo",
+  "comment": "Program for the CSV snapshot-ingestion demo: supplier orders and known customer addresses, a SameAs bridge that copies addresses, plus address/customer EGDs. Symbolic column names are pinned for the ingestion declarations.",
+  "schema": {
+    "columns": {
+      "Order":        ["text", "int", "text"],
+      "Customer":     ["text", "text"],
+      "KnownAddress": ["text", "text"],
+      "SameAs":       ["text", "text"]
+    },
+    "column_names": {
+      "Order":        ["order_id", "qty", "customer_id"],
+      "Customer":     ["customer_id", "city"],
+      "KnownAddress": ["customer_id", "addr"],
+      "SameAs":       ["left_id", "right_id"]
+    }
+  },
+  "rules": [
+    {"id": "t_order_customer", "body": ["Order(o, q, c)"], "head": "Customer(c, y)"},
+    {"id": "t_known_customer", "body": ["KnownAddress(c, a)"], "head": "Customer(c, a)"},
+    {"id": "t_sameas_copy",    "body": ["SameAs(x, y)", "KnownAddress(x, a)"], "head": "KnownAddress(y, a)"},
+    {"id": "e_customer_key",   "body": ["Customer(c, a1)", "Customer(c, a2)"], "eq": ["a1", "a2"]},
+    {"id": "e_address_key",    "body": ["KnownAddress(c, a1)", "KnownAddress(c, a2)"], "eq": ["a1", "a2"]}
+  ]
+}

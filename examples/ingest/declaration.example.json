@@ -1,0 +1,41 @@
+{
+  "connector": "supplier-alpha",
+  "version": 1,
+  "comment": "Complete small declaration example. Every key is documented; any other key (including typos) is rejected at parse time. Two managed source_ids map to two different relations; each source_id maps to exactly one relation.",
+  "unknown_markers": {
+    "marker": "NULL",
+    "name_prefix": "NULL:",
+    "name_separator": "|",
+    "name_pattern": "[a-zA-Z][a-zA-Z0-9_]*"
+  },
+  "sources": [
+    {
+      "source_id": "erp",
+      "relation": "Order",
+      "key_columns": ["order_id"],
+      "fields": [
+        {"name": "order_id",    "header": "order_id"},
+        {"name": "qty",         "header": "qty"},
+        {"name": "customer_id", "header": "customer_id"}
+      ],
+      "shards": [
+        {"path": "demo_snapshots/erp_snapshot_2026-11-18_part1.csv"},
+        {"path": "demo_snapshots/erp_snapshot_2026-11-18_part2.csv"}
+      ],
+      "empty_snapshot": false
+    },
+    {
+      "source_id": "crm",
+      "relation": "KnownAddress",
+      "key_columns": ["customer_id"],
+      "fields": [
+        {"name": "customer_id", "header": "customer_id"},
+        {"name": "addr",        "header": "addr"}
+      ],
+      "shards": [
+        {"path": "demo_snapshots/crm_snapshot_2026-11-18.csv"}
+      ],
+      "empty_snapshot": false
+    }
+  ]
+}

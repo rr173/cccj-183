@@ -460,12 +460,19 @@ class Workspace:
 
     # -- batch commit ------------------------------------------------------- #
     def commit(self, batch_obj: object, parent: Optional[int] = None,
-               budget_overrides: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+               budget_overrides: Optional[Dict[str, Any]] = None,
+               external_hook: Optional[Any] = None) -> Dict[str, Any]:
         """Validate and commit one batch; returns the commit receipt.
 
         The receipt is stable: re-sending the same batch id with the same
         typed content returns the *original* receipt with
         ``idempotent_replay: true`` and performs no computation.
+
+        ``external_hook(conn, version)`` (when given) runs inside the same
+        SQLite transaction after the version row is written but before the
+        commit, so external ledgers — e.g. the CSV snapshot connector's
+        managed-source bookkeeping — can never diverge from workspace state
+        across a hard process exit.
         """
         try:
             parsed = parse_batch(batch_obj, self.schema)
@@ -606,6 +613,9 @@ class Workspace:
                 self._set_pointer("latest_complete_version", str(version))
             receipt["latest_source_version"] = version
             receipt["latest_complete_version"] = self.latest_complete_version()
+            if external_hook is not None:
+                # same transaction: a crash here rolls the whole commit back
+                external_hook(self.conn, version)
             # test-only crash hook: die inside the uncommitted transaction
             _crash_point("before_commit")
             self.conn.commit()

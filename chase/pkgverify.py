@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from .model import ModelError, Rule, Schema, parse_program, parse_value
+from .model import (
+    ModelError, Rule, Schema, parse_program, parse_value, schema_from_json,
+)
 from .package import Package
 from .store import Store
 from .verify import VerifyReport, Verifier
@@ -19,7 +21,9 @@ from .verify import VerifyReport, Verifier
 class LoadedPackage:
     def __init__(self, pkg: Package) -> None:
         self.pkg = pkg
-        self.schema: Schema = Schema({r: tuple(c) for r, c in pkg.schema.items()})
+        # schema_from_json accepts both the legacy {rel: [types]} layout and
+        # the named-column {columns, column_names} layout used by ingestion
+        self.schema: Schema = schema_from_json(pkg.schema)
         rules_obj = pkg.rules
         if isinstance(rules_obj, dict) and "rules" in rules_obj:
             program = rules_obj

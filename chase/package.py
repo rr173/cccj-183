@@ -144,7 +144,13 @@ class Package:
         if os.path.isfile(self.path("conflict.json")):
             with open(self.path("conflict.json"), encoding="utf-8") as fh:
                 self.conflict = json.load(fh)
-        facts: Dict[str, List[Tuple[object, ...]]] = {r: [] for r in self.schema}
+        # accept both the legacy {rel: [types]} schema and the named-column
+        # {columns, column_names} layout
+        if isinstance(self.schema, dict) and "columns" in self.schema:
+            type_map = self.schema["columns"]
+        else:
+            type_map = self.schema
+        facts: Dict[str, List[Tuple[object, ...]]] = {r: [] for r in type_map}
         with open(self.path("facts.csv"), encoding="utf-8", newline="") as fh:
             reader = csv.reader(fh)
             header = next(reader, None)
@@ -157,7 +163,7 @@ class Package:
                 if rel not in facts:
                     raise ModelError(f"{self.dir}: fact for undeclared relation {rel!r}")
                 vals = tuple(decode_value(v) for v in json.loads(payload))
-                if len(vals) != len(self.schema[rel]):
+                if len(vals) != len(type_map[rel]):
                     raise ModelError(f"{self.dir}: arity mismatch in {rel}: {vals!r}")
                 facts[rel].append(vals)
         self.facts = facts

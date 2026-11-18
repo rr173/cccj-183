@@ -353,6 +353,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     from . import wscli
     wscli.register(sub)
+    from . import ingest_cli
+    ingest_cli.register(sub)
     return p
 
 

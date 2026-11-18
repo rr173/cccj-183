@@ -137,10 +137,35 @@ transactions; concurrent writers get a clear stale-parent error.  See
 `docs/WORKSPACE.md` and `bash examples/corrections/demo.sh`.
 
 
+## CSV snapshot ingestion (supplier full-table feeds)
+
+When a supplier sends a **full table snapshot** as CSV shards instead of
+hand-written `put`/`delete` ops, use the two-phase ingestion group.  `ingest
+stage` fully parses and strictly converts every shard, reconciles new /
+replaced / kept / quarantined / retracted source records without advancing a
+source version, and persists the typed snapshot so deleting the original CSV
+later changes nothing; `ingest apply` then writes one ordinary source batch
+against the exact parent version checked at stage time.  A bad row is
+quarantined (its key still counts as present) and can never be mistaken for a
+retraction; only a key absent from a complete, unblocked snapshot is deleted.
+
+```bash
+python3 -I run_cli.py ingest stage   WS --declaration decl.json --task T1
+python3 -I run_cli.py ingest changes WS --task T1      # per-key why-put/delete/keep
+python3 -I run_cli.py ingest explain WS --task T1 --source erp --record-key '...'
+python3 -I run_cli.py ingest apply   WS --task T1
+```
+
+Connectors own only the sources they claim, cannot change their binding
+silently, detect external `ws commit` touches (including same-value
+replacements) and stale parents, and survive hard process exits.  See
+`docs/INGEST.md`, `examples/ingest/`, `scripts/ingest_demo.py` and the
+100 000-row measured run `scripts/ingest_scale_profiled.py`.
+
 ## Development
 
 ```bash
-python3 run_tests.py            # 121 tests, no external deps required
+python3 run_tests.py            # test suite, no external deps required
 python3 -m chase.bench --orders 50000 --customers 10000 --no-verify
 python3 -m chase.wsbench --workspace /tmp/wsb --orders 10000 --customers 2000 --corrections 8
 ```

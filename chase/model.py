@@ -205,10 +205,16 @@ def parse_value(raw: object) -> object:
 @dataclass(frozen=True)
 class Schema:
     relations: Dict[str, Tuple[str, ...]]
+    # Optional symbolic column names per relation (same length as the type
+    # tuple).  The engine keeps keying off the type tuples; names are only a
+    # declarative convenience used by the snapshot ingestion layer.  When
+    # absent, columns are addressed by their positional names c0, c1, ...
+    column_names: Dict[str, Tuple[str, ...]] = None
 
     def __post_init__(self) -> None:
         if not self.relations:
             raise ModelError("schema declares no relations")
+        names: Dict[str, Tuple[str, ...]] = {}
         for rel, cols in self.relations.items():
             if not REL_NAME_RE.match(rel):
                 raise ModelError(f"illegal relation name {rel!r}")
@@ -218,6 +224,22 @@ class Schema:
                 if c not in DOMAINS:
                     raise ModelError(
                         f"relation {rel!r} column type must be text/int, got {c!r}")
+            names[rel] = tuple(f"c{i}" for i in range(len(cols)))
+        if self.column_names:
+            for rel, cnames in self.column_names.items():
+                if rel not in self.relations:
+                    raise ModelError(
+                        f"column_names for undeclared relation {rel!r}")
+                if len(cnames) != len(self.relations[rel]):
+                    raise ModelError(
+                        f"relation {rel!r}: {len(cnames)} column names for "
+                        f"{len(self.relations[rel])} columns")
+                if len(set(cnames)) != len(cnames):
+                    raise ModelError(
+                        f"relation {rel!r}: duplicate column names {list(cnames)}")
+                names[rel] = tuple(cnames)
+        # frozen dataclass: use object.__setattr__ for the normalized default
+        object.__setattr__(self, "column_names", names)
 
     def check_atom(self, atom: Atom, where: str) -> None:
         if atom.rel not in self.relations:
@@ -247,13 +269,57 @@ class Schema:
         except KeyError:
             raise ModelError(f"relation {rel!r} is not declared in the schema") from None
 
-    def to_json(self) -> Dict[str, List[str]]:
-        return {r: list(c) for r, c in self.relations.items()}
+    def names(self, rel: str) -> Tuple[str, ...]:
+        """Symbolic column names of ``rel`` (positional c0.. when unnamed)."""
+        try:
+            return self.column_names[rel]
+        except KeyError:
+            raise ModelError(f"relation {rel!r} is not declared in the schema") from None
+
+    def column_position(self, rel: str, name: str) -> int:
+        try:
+            return self.names(rel).index(name)
+        except ValueError:
+            raise ModelError(
+                f"relation {rel!r} has no column named {name!r}; columns are "
+                f"{list(self.names(rel))}") from None
+
+    def to_json(self) -> Dict[str, Any]:
+        has_names = any(
+            cnames != tuple(f"c{i}" for i in range(len(self.relations[rel])))
+            for rel, cnames in self.column_names.items())
+        if not has_names:
+            return {r: list(c) for r, c in self.relations.items()}
+        return {
+            "columns": {r: list(c) for r, c in self.relations.items()},
+            "column_names": {r: list(n) for r, n in self.column_names.items()},
+        }
 
 
 def schema_from_json(obj: object) -> Schema:
     if not isinstance(obj, dict):
         raise ModelError("schema must be an object mapping relation -> list of column types")
+    if "columns" in obj:
+        cols_obj = obj["columns"]
+        names_obj = obj.get("column_names")
+        if not isinstance(cols_obj, dict):
+            raise ModelError("schema 'columns' must be an object")
+        if names_obj is not None and not isinstance(names_obj, dict):
+            raise ModelError("schema 'column_names' must be an object")
+        rels = {}
+        names = {}
+        for rel, cols in cols_obj.items():
+            if not isinstance(cols, list) or not all(isinstance(c, str) for c in cols):
+                raise ModelError(f"schema.columns.{rel} must be a list of 'text'/'int'")
+            rels[rel] = tuple(cols)
+            if names_obj is not None and rel in names_obj:
+                cnames = names_obj[rel]
+                if not isinstance(cnames, list) or not all(
+                        isinstance(n, str) and n for n in cnames):
+                    raise ModelError(
+                        f"schema.column_names.{rel} must be a list of non-empty strings")
+                names[rel] = tuple(cnames)
+        return Schema(rels, names or None)
     rels = {}
     for rel, cols in obj.items():
         if not isinstance(cols, list) or not all(isinstance(c, str) for c in cols):
