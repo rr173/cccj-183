@@ -162,6 +162,37 @@ replacements) and stale parents, and survive hard process exits.  See
 `docs/INGEST.md`, `examples/ingest/`, `scripts/ingest_demo.py` and the
 100 000-row measured run `scripts/ingest_scale_profiled.py`.
 
+## Declarative queries over one completed version (`ws query`)
+
+`ws query` runs a restricted, declarative **JSON** query (multi-relation
+joins, column/column and column/typed-constant equality, projection and set
+de-duplication — no SQL, no Python, no negation, aggregation or user code)
+against exactly one `complete` version, bound by an integer or the one-shot
+`latest-complete` token.  A conflict/incomplete newest source version is never
+mixed in or disguised as the latest success.  The version is pinned inside one
+read transaction, so a commit landing during a multi-relation query cannot make
+it read two versions.
+
+`labeled_null` certainty rules are enforced end to end: unknowns can join on
+shared identity (same id across relations) but never equal a supplied constant
+and never reach an output column; only distinct tuples whose projections are
+all known constants are returned.  The text `"7"`, the int `7` and an unknown
+stay distinct.  An empty/truncated result means "no fully certain answer under
+these bounds", not "nothing exists in reality".
+
+```bash
+python3 -I run_cli.py ws query WS --query Q.json --version latest-complete
+python3 -I run_cli.py ws query WS --query Q.json --version 2 -o result.json
+```
+
+Execution uses a temporary on-disk SQLite database and indexes, streaming the
+pinned version's facts in bounded batches (no whole relation or full join
+result in Python memory).  Output files are published atomically, so a failed
+or interrupted run never overwrites a previous success.  See `docs/QUERY.md`,
+`bash examples/query/demo.sh` and the 144 000-fact measured run
+`python3 -I scripts/wsquery_scale.py` (data generated at runtime, not
+committed).
+
 ## Development
 
 ```bash

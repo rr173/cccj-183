@@ -1,0 +1,29 @@
+{
+  "relations": [
+    {
+      "name": "Item",
+      "alias": "it"
+    }
+  ],
+  "select": [
+    {
+      "column": "it.c0",
+      "name": "order_id"
+    },
+    {
+      "column": "it.c2",
+      "name": "qty_int_7"
+    }
+  ],
+  "where": [
+    {
+      "eq": [
+        "it.c2",
+        {
+          "type": "int",
+          "value": 7
+        }
+      ]
+    }
+  ]
+}

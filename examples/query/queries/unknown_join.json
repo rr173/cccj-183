@@ -1,0 +1,32 @@
+{
+  "relations": [
+    {
+      "name": "Customer",
+      "alias": "c"
+    },
+    {
+      "name": "RegionNote",
+      "alias": "n"
+    }
+  ],
+  "select": [
+    {
+      "column": "c.c0",
+      "name": "customer_id"
+    }
+  ],
+  "where": [
+    {
+      "eq": [
+        "c.c0",
+        "n.c0"
+      ]
+    },
+    {
+      "eq": [
+        "c.c1",
+        "n.c1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "east_region_query_demo",
+  "comment": "Fixed program for the declarative query demo: orders need customers, customers need a region, known regions are copied in, one region per customer (EGD). Includes int columns so text '7' vs int 7 vs unknown can be told apart.",
+  "schema": {
+    "Order":      ["text", "text"],
+    "Customer":   ["text", "text"],
+    "KnownRegion": ["text", "text"],
+    "RegionNote":  ["text", "text"],
+    "Item":       ["text", "text", "int"]
+  },
+  "rules": [
+    {"id": "t_order_customer", "body": ["Order(o, c)"], "head": "Customer(c, r)"},
+    {"id": "t_known_region",  "body": ["KnownRegion(c, r)"], "head": "Customer(c, r)"},
+    {"id": "e_customer_region", "body": ["Customer(c, r1)", "Customer(c, r2)"],
+     "eq": ["r1", "r2"]}
+  ]
+}

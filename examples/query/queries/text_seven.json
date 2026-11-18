@@ -1,0 +1,33 @@
+{
+  "relations": [
+    {
+      "name": "Item",
+      "alias": "it"
+    }
+  ],
+  "select": [
+    {
+      "column": "it.c0",
+      "name": "order_id"
+    },
+    {
+      "column": "it.c1",
+      "name": "sku_text_7"
+    },
+    {
+      "column": "it.c2",
+      "name": "qty"
+    }
+  ],
+  "where": [
+    {
+      "eq": [
+        "it.c1",
+        {
+          "type": "text",
+          "value": "7"
+        }
+      ]
+    }
+  ]
+}

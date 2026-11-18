@@ -1,0 +1,6 @@
+{
+  "batch_id": "b4-budget-retry",
+  "comment": "v4 no-source-change re-run with a deliberately tiny budget so the completion is recorded as incomplete. latest-complete still points at v2.",
+  "ops": [],
+  "budgets": {"max_facts": 1}
+}

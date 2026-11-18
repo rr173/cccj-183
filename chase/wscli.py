@@ -10,16 +10,19 @@ Commands
     ws export   WS --version N|latest|latest-complete -o OUT [--force]
     ws diff     WS --from A --to B [--human]
     ws verify   EXPORT_DIR
+    ws query    WS --query Q.json --version N|latest-complete [-o OUT]
+                [--max-rows R] [--max-seconds S]
 
 Exit codes (workspace commands)
 -------------------------------
-0  ok / committed a complete version / verified
+0  ok / committed a complete version / verified / complete query result
 2  committed a conflict version (the commit itself succeeded)
 3  committed an incomplete version, or an internal error occurred
 4  verification failed
-5  usage error / batch rejected as illegal
+5  usage error / batch rejected as illegal / query rejected
 6  stale parent version (someone else committed first; re-read and decide)
 7  batch id re-used with different content
+8  query succeeded but its result is truncated (row/time cap reached)
 """
 
 from __future__ import annotations
@@ -30,6 +33,7 @@ import sys
 from typing import Any, Dict
 
 from .model import ModelError, ProgramError
+from .query import QueryError
 from .wsexport import export_version
 from .workspace import (
     BatchIdConflict,
@@ -39,6 +43,7 @@ from .workspace import (
     WorkspaceError,
 )
 from .wsdiff import diff_payloads, render_human
+from .wsquery import run_query
 from .wsverify import verify_export
 
 EXIT_OK = 0
@@ -48,6 +53,7 @@ EXIT_VERIFY_FAILED = 4
 EXIT_USAGE = 5
 EXIT_STALE = 6
 EXIT_BATCH_ID_CONFLICT = 7
+EXIT_TRUNCATED = 8
 
 _STATUS_EXIT = {"complete": EXIT_OK, "conflict": EXIT_CONFLICT,
                 "incomplete": EXIT_INCOMPLETE}
@@ -213,6 +219,37 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return EXIT_OK if report.get("ok") else EXIT_VERIFY_FAILED
 
 
+def cmd_query(args: argparse.Namespace) -> int:
+    """Run a declarative JSON query against one pinned complete version."""
+    try:
+        query_obj = _load_json_file(args.query)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"error: cannot read query file: {exc}", file=sys.stderr)
+        return EXIT_USAGE
+    try:
+        envelope = run_query(
+            args.workspace, query_obj, args.version,
+            max_rows=args.max_rows, max_seconds=args.max_seconds,
+            batch_size=args.batch_size,
+            output=args.output, force=args.force,
+            stdout=(None if args.output else sys.stdout))
+    except QueryError as exc:
+        print(f"error: query rejected: {exc}", file=sys.stderr)
+        return EXIT_USAGE
+    except WorkspaceError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_USAGE
+    if args.output:
+        # full envelope went to the file; print a short summary to stdout
+        summary = {k: envelope[k] for k in (
+            "format", "bound_version", "query_digest", "result_status",
+            "limit_reason", "row_count", "rows_scanned", "elapsed_seconds",
+            "output", "total_facts_loaded") if k in envelope}
+        summary["output"] = args.output
+        _print(summary)
+    return EXIT_TRUNCATED if envelope["result_status"] == "truncated" else EXIT_OK
+
+
 # --------------------------------------------------------------------------- #
 # parser wiring
 # --------------------------------------------------------------------------- #
@@ -275,3 +312,26 @@ def register(sub: argparse._SubParsersAction) -> None:
     p.add_argument("export")
     p.add_argument("--verify-cap", type=int, default=None)
     p.set_defaults(func=cmd_verify)
+
+    p = wsub.add_parser(
+        "query", help="run a declarative JSON query on one complete version")
+    p.add_argument("workspace")
+    p.add_argument("--query", required=True,
+                   help="declarative query JSON file (relations/select/where)")
+    p.add_argument("--version", required=True,
+                   help="integer version or 'latest-complete' (resolved once)")
+    p.add_argument("-o", "--output", default=None,
+                   help="write the full result envelope to this file; an "
+                        "existing file is never overwritten without --force, "
+                        "and a failed/interrupted run leaves it untouched")
+    p.add_argument("--force", action="store_true",
+                   help="replace an existing output file")
+    p.add_argument("--max-rows", type=int, default=None,
+                   help="cap the number of result rows; hitting the cap marks "
+                        "the result truncated (exit code 8)")
+    p.add_argument("--max-seconds", type=float, default=None,
+                   help="wall-clock cap for result fetching; hitting it marks "
+                        "the result truncated (exit code 8)")
+    p.add_argument("--batch-size", type=int, default=1000,
+                   help="rows per SQLite fetch / insert batch (bounded memory)")
+    p.set_defaults(func=cmd_query)

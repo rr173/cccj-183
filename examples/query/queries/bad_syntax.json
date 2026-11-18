@@ -1,0 +1,25 @@
+{
+  "relations": [
+    {
+      "name": "Order",
+      "alias": "o"
+    }
+  ],
+  "select": [
+    {
+      "column": "o.c0",
+      "name": "order_id"
+    }
+  ],
+  "where": [
+    {
+      "ne": [
+        "o.c1",
+        {
+          "type": "text",
+          "value": "c1"
+        }
+      ]
+    }
+  ]
+}

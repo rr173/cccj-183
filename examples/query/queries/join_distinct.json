@@ -1,0 +1,49 @@
+{
+  "relations": [
+    {
+      "name": "Order",
+      "alias": "o"
+    },
+    {
+      "name": "Customer",
+      "alias": "c"
+    },
+    {
+      "name": "Item",
+      "alias": "it"
+    }
+  ],
+  "select": [
+    {
+      "column": "it.c2",
+      "name": "qty"
+    },
+    {
+      "column": "c.c1",
+      "name": "region"
+    }
+  ],
+  "where": [
+    {
+      "eq": [
+        "o.c1",
+        "c.c0"
+      ]
+    },
+    {
+      "eq": [
+        "o.c0",
+        "it.c0"
+      ]
+    },
+    {
+      "eq": [
+        "c.c1",
+        {
+          "type": "text",
+          "value": "南区"
+        }
+      ]
+    }
+  ]
+}

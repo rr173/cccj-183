@@ -1,0 +1,13 @@
+{
+  "relations": [
+    {"name": "Customer", "alias": "a"},
+    {"name": "Customer", "alias": "b"}
+  ],
+  "select": [
+    {"column": "a.c0", "name": "customer_a"},
+    {"column": "b.c0", "name": "customer_b"}
+  ],
+  "where": [
+    {"eq": ["a.c1", "b.c1"]}
+  ]
+}

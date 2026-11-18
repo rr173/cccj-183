@@ -1,6 +1,6 @@
 PY ?= python3
 
-.PHONY: test check examples bench clean ingest-demo ingest-scale
+.PHONY: test check examples bench clean ingest-demo ingest-scale ws-query-demo ws-query-scale
 
 test:
 	$(PY) -I run_tests.py
@@ -29,6 +29,12 @@ ingest-demo:
 
 ingest-scale:
 	$(PY) -I scripts/ingest_scale_profiled.py --rows 100000 --shards 4
+
+ws-query-demo:
+	bash examples/query/demo.sh /tmp/chase-ws-query-demo
+
+ws-query-scale:
+	$(PY) -I scripts/wsquery_scale.py --workspace /tmp/chase-ws-query-scale --orders 60000 --customers 12000
 
 clean:
 	rm -rf __pycache__ chase/__pycache__ tests/__pycache__ scripts/__pycache__ .pytest_cache

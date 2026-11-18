@@ -1,0 +1,7 @@
+{
+  "batch_id": "b2-c2-east",
+  "comment": "v2 correction REPLACES c2's record: the raw unknown is retracted and the region becomes the known 东区. The derived unknown for c4 (a different customer sharing the u1 input id elsewhere) stays unknown here, because no rule equates the two customers' regions. (The test suite's additive variant instead keeps both records and shows the EGD merging the shared unknown.)",
+  "ops": [
+    {"op": "put", "source_id": "crm", "record_id": "region-c2", "relation": "KnownRegion", "tuple": ["c2", "东区"]}
+  ]
+}

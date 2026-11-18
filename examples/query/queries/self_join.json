@@ -1,0 +1,44 @@
+{
+  "relations": [
+    {
+      "name": "Item",
+      "alias": "a"
+    },
+    {
+      "name": "Item",
+      "alias": "b"
+    }
+  ],
+  "select": [
+    {
+      "column": "a.c0",
+      "name": "order_id"
+    }
+  ],
+  "where": [
+    {
+      "eq": [
+        "a.c0",
+        "b.c0"
+      ]
+    },
+    {
+      "eq": [
+        "a.c1",
+        {
+          "type": "text",
+          "value": "7"
+        }
+      ]
+    },
+    {
+      "eq": [
+        "b.c2",
+        {
+          "type": "int",
+          "value": 7
+        }
+      ]
+    }
+  ]
+}

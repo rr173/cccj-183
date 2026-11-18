@@ -1,0 +1,31 @@
+{
+  "batch_id": "b1-base",
+  "ops": [
+    {"op": "put", "source_id": "erp",  "record_id": "order-o1", "relation": "Order", "tuple": ["o1", "c1"]},
+    {"op": "put", "source_id": "erp",  "record_id": "order-o2", "relation": "Order", "tuple": ["o2", "c2"]},
+    {"op": "put", "source_id": "erp",  "record_id": "order-o3", "relation": "Order", "tuple": ["o3", "c3"]},
+    {"op": "put", "source_id": "erp",  "record_id": "order-o4", "relation": "Order", "tuple": ["o4", "c4"]},
+    {"op": "put", "source_id": "erp",  "record_id": "order-o5", "relation": "Order", "tuple": ["o5", "c5"]},
+    {"op": "put", "source_id": "shop", "record_id": "order-o6", "relation": "Order", "tuple": ["o6", "c5"]},
+    {"op": "put", "source_id": "erp",  "record_id": "order-o7", "relation": "Order", "tuple": ["o7", "c6"]},
+
+    {"op": "put", "source_id": "crm", "record_id": "region-c1", "relation": "KnownRegion", "tuple": ["c1", "东区"]},
+    {"op": "put", "source_id": "crm", "record_id": "region-c5", "relation": "KnownRegion", "tuple": ["c5", "南区"]},
+    {"op": "put", "source_id": "crm", "record_id": "region-c2", "relation": "KnownRegion", "tuple": ["c2", {"null": "u1"}]},
+    {"op": "put", "source_id": "crm", "record_id": "region-c4", "relation": "KnownRegion", "tuple": ["c4", {"null": "u1"}]},
+    {"op": "put", "source_id": "crm", "record_id": "region-c3", "relation": "KnownRegion", "tuple": ["c3", {"null": "u2"}]},
+    {"op": "put", "source_id": "crm", "record_id": "region-c6", "relation": "KnownRegion", "tuple": ["c6", {"null": "u3"}]},
+
+    {"op": "put", "source_id": "ops", "record_id": "note-c2", "relation": "RegionNote", "tuple": ["c2", {"null": "u1"}]},
+    {"op": "put", "source_id": "ops", "record_id": "note-c3", "relation": "RegionNote", "tuple": ["c3", {"null": "u2"}]},
+    {"op": "put", "source_id": "ops", "record_id": "note-c4", "relation": "RegionNote", "tuple": ["c4", {"null": "u1"}]},
+    {"op": "put", "source_id": "ops", "record_id": "note-c6", "relation": "RegionNote", "tuple": ["c6", {"null": "u3"}]},
+
+    {"op": "put", "source_id": "wms", "record_id": "item-o1", "relation": "Item", "tuple": ["o1", "7", 700]},
+    {"op": "put", "source_id": "wms", "record_id": "item-o2", "relation": "Item", "tuple": ["o2", "7", 7]},
+    {"op": "put", "source_id": "wms", "record_id": "item-o3", "relation": "Item", "tuple": ["o3", "x7", 7]},
+    {"op": "put", "source_id": "wms", "record_id": "item-o4", "relation": "Item", "tuple": ["o4", "7", 9]},
+    {"op": "put", "source_id": "wms", "record_id": "item-o5", "relation": "Item", "tuple": ["o5", "8", 42]},
+    {"op": "put", "source_id": "wms", "record_id": "item-o6", "relation": "Item", "tuple": ["o6", "8", 42]}
+  ]
+}

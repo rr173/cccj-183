@@ -1,0 +1,7 @@
+{
+  "batch_id": "b3-conflicting-region",
+  "comment": "v3 legal but conflicting batch: c1 already has 东区; a second known region 北区 forces two distinct constants to be equal -> conflict version, latest-complete stays at v2.",
+  "ops": [
+    {"op": "put", "source_id": "crm2", "record_id": "region-c1-north", "relation": "KnownRegion", "tuple": ["c1", "北区"]}
+  ]
+}
